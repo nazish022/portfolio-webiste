@@ -1,0 +1,140 @@
+[
+  {
+    "id": "visa-pay",
+    "title": "Visa Pay",
+    "year": "2024",
+    "role": "iOS Engineer",
+    "tagline": "Virtual cards, wallets, and Scan-to-Pay on iOS for Visa's Pay-By-Wallet platform.",
+    "stack": ["Swift", "SwiftUI", "REST APIs"],
+    "tags": ["iOS", "Swift", "SwiftUI", "Payments"],
+    "overview": "An iOS application built for Visa's Pay-By-Wallet (PBW) platform — provisioning virtual cards on demand, managing wallet contents, and paying merchants via Scan-to-Pay. The app sits on top of Juspay's payments infrastructure and integrates a wide REST API surface across card lifecycle, authentication, and settlement.",
+    "overviewExtra": "I owned the iOS feature set end-to-end — from API integration and state design to a small SwiftUI design system that's now used across new Visa features beyond PBW.",
+    "problem": "Visa needed a polished iOS surface for PBW. The challenge wasn't the feature list — it was making multi-step flows feel inevitable: interruption-safe, error-honest, and quick on slow networks.",
+    "approach": "I treated each flow as an explicit finite state machine and let SwiftUI render off the state, never the reverse. Network errors, backgrounding, and low-signal conditions all turn into legible UI states instead of crashes or frozen screens. Reusable primitives (buttons, sheets, form rows) compose into screens so feature dev moves at design speed.",
+    "techChoices": [
+      { "tech": "Swift + SwiftUI", "reason": "Native composition beats UIKit bridges for design-led product work — primitives moved fast and stayed accessible." },
+      { "tech": "Combine", "reason": "Reactive state pipelines without leaking subscriptions across views." },
+      { "tech": "URLSession over Alamofire", "reason": "Fewer dependencies, full control over retry and error semantics in a payments context." }
+    ],
+    "keyFeatures": [
+      { "title": "Virtual card provisioning", "description": "On-demand card generation with secure tokenization and full lifecycle management — issue, freeze, replace." },
+      { "title": "Wallet creation & management", "description": "Create, fund, and manage digital wallets with balance tracking, transaction history, and lifecycle events." },
+      { "title": "Scan-to-Pay flow", "description": "QR capture with merchant verification, malformed-payload handling, and a recoverable error surface for every failure mode." },
+      { "title": "SwiftUI design system", "description": "A small set of buttons, sheets, and form rows. New screens compose from primitives — feature dev time dropped noticeably." }
+    ],
+    "challenges": [
+      {
+        "problem": "Multi-step flows had to remain interruption-safe — backgrounding the app or losing connectivity mid-flow couldn't corrupt state.",
+        "solution": "Every state transition persists. The UI reconstructs the correct step on relaunch — turning a network blip from a bug report into a no-op.",
+        "learning": "Modeling flows as explicit state machines pays for itself the first time a user comes back from a backgrounded app and everything just works."
+      },
+      {
+        "problem": "Scan-to-Pay had to handle camera permissions, malformed QR payloads, and merchant-not-found responses without dropping users into a dead end.",
+        "solution": "A single error surface maps every failure (system, parsing, network, business) to a recoverable UI state with a clear next action — never a silent fail.",
+        "learning": "In payments, an honest error message is worth more than a thousand happy-path animations. Users forgive failure; they don't forgive silence."
+      },
+      {
+        "problem": "UI components were duplicated across screens early in the project, slowing iteration.",
+        "solution": "Refactored into a small SwiftUI design system. New screens compose from primitives.",
+        "learning": "Pull the component library out of the second screen, not the tenth — the cost of refactor grows non-linearly."
+      }
+    ],
+    "outcome": "Three core flows shipped to production: virtual card generation, wallet creation, and Scan-to-Pay. The internal SwiftUI primitives are now used across new features beyond PBW — turning a one-off project into shared platform value.",
+    "links": [],
+    "internal": true,
+    "gradient": "linear-gradient(135deg, #1a1410 0%, #3a2a18 50%, #c9a96e 140%)",
+    "featured": true
+  },
+  {
+    "id": "mfa-cnp-sdk",
+    "title": "MFA & CNP SDK",
+    "year": "2024",
+    "role": "SDK Engineer",
+    "tagline": "A type-safe, cross-platform SDK powering Card-Not-Present payments and Multi-Factor Auth on iOS + Android.",
+    "stack": ["PureScript", "Functional", "Cross-platform"],
+    "tags": ["PureScript", "Functional Programming", "Cross-Platform"],
+    "overview": "A shared business-logic layer written in PureScript that compiles to JavaScript and runs inside both iOS and Android wrappers. It encodes the complete state machine for CNP transactions and MFA challenges — meaning both platforms share one source of truth for behavior, while each retains a fully native UI.",
+    "overviewExtra": "The goal: make platform parity a build-time guarantee rather than a release-checklist item. PRs fixing CNP or MFA edge cases now ship to both platforms simultaneously.",
+    "problem": "Two platforms had drifted: a CNP fix on iOS could go un-shipped on Android for weeks. Every edge case in the auth and payment flow was being implemented twice — and the second copy was always slightly behind.",
+    "approach": "Modeled the full state space — every transaction status, every MFA challenge — as PureScript ADTs. The compiler refuses to ship a build that forgets a case. Native UI on each platform; one shared brain. The boundary between PureScript and the host runtime is a single explicitly-typed envelope; everything past it stays inside the type system.",
+    "techChoices": [
+      { "tech": "PureScript", "reason": "Row polymorphism + algebraic data types catch entire categories of bugs at compile time." },
+      { "tech": "Compile to JavaScript", "reason": "Runs in JavaScriptCore on iOS and V8 on Android — small, predictable runtime, no platform-specific binaries." },
+      { "tech": "Tight FFI envelope", "reason": "Serialization happens at one boundary; everything past it stays inside the type system." }
+    ],
+    "keyFeatures": [
+      { "title": "Typed state machine", "description": "Every CNP transaction and MFA challenge state is an ADT case. Forgetting a state is a compile error, not a production incident." },
+      { "title": "Native UI on each platform", "description": "iOS keeps its Swift/SwiftUI surface. Android keeps its Kotlin surface. The shared SDK is the brain, not the body." },
+      { "title": "FFI envelope boundary", "description": "A single serialization layer between PureScript and the host runtime — the only place 'untyped' lives." },
+      { "title": "Versioned SDK artifact", "description": "Both apps consume the SDK as a versioned package. A behavioral fix is one PR, two app updates — no coordination tax." }
+    ],
+    "challenges": [
+      {
+        "problem": "Bridging PureScript to native runtimes risked runtime errors that defeat the purpose of static typing.",
+        "solution": "Designed a minimal, explicitly typed envelope at each boundary. The 'untyped' part is a single, audited surface — not scattered across the codebase.",
+        "learning": "Type safety is only as strong as your weakest boundary. Make that boundary explicit, narrow, and well-tested."
+      },
+      {
+        "problem": "Onboarding new contributors to PureScript inside an OOP-heavy team.",
+        "solution": "Wrote internal docs and worked examples mapping idiomatic OOP patterns to FP equivalents. Lowered the ramp-up barrier without diluting the code.",
+        "learning": "FP isn't 'better' than OOP in the abstract — it just makes different things easier to reason about. Teaching the *correspondence* helps people port intuition over."
+      },
+      {
+        "problem": "Synchronizing releases across two app teams used to require ceremony.",
+        "solution": "The shared SDK ships as a versioned artifact both apps consume. A behavioral fix is one PR, two app updates — no coordination tax.",
+        "learning": "Coordination cost is a tax on velocity. Architecture that removes it pays dividends every sprint, not just the first one."
+      }
+    ],
+    "outcome": "Behavioral parity between iOS and Android became a build-time guarantee, not a release-checklist item. PRs fixing CNP edge cases now land on both platforms simultaneously — the coordination tax dropped to near zero.",
+    "links": [],
+    "internal": true,
+    "gradient": "linear-gradient(135deg, #14181c 0%, #2a323a 50%, #c9a96e 130%)",
+    "featured": true
+  },
+  {
+    "id": "food-delivery",
+    "title": "Food Delivery App",
+    "year": "2023",
+    "role": "Full-stack Developer",
+    "tagline": "A 6+ page full-stack ordering app — auth, cart, search, orders. Built solo to learn the stack end-to-end.",
+    "stack": ["NodeJS", "MongoDB", "HTML/CSS/JS"],
+    "tags": ["Node.js", "MongoDB", "Full-Stack", "JavaScript"],
+    "overview": "An end-to-end food ordering web application built solo to learn the full stack without hiding behind a framework. Server-rendered pages with vanilla JS for interactivity, MongoDB for persistence, secure user authentication, a persistent cart, search across menu items, order placement, and a UI that holds up on phones.",
+    "overviewExtra": "I picked an app domain I already understood (food ordering) and committed to building it solo, top to bottom — to develop a complete mental model of how a request travels from form to database and back.",
+    "problem": "I wanted to learn the whole stack end-to-end without hiding behind a framework. I needed to build the muscle memory for HTTP, sessions, persistence, and auth — not just the abstractions on top.",
+    "approach": "Server-rendered pages, vanilla JS for interactivity, MongoDB for persistence. Cart state lives server-side keyed to the session — refreshes don't drop it. Auth uses bcrypt with a sensible work factor. Shared layout partials and a small CSS utility set keep the 6+ pages cohesive without a framework.",
+    "techChoices": [
+      { "tech": "Node.js + Express", "reason": "Smallest viable backend — learn fundamentals, not a framework." },
+      { "tech": "MongoDB", "reason": "Schema-on-read fit the iterative shape of a learning project." },
+      { "tech": "bcrypt", "reason": "Built the habit early — never store plaintext, even in toy projects." }
+    ],
+    "keyFeatures": [
+      { "title": "Secure authentication", "description": "Bcrypt-hashed passwords with a sensible work factor. Session-based login, no plaintext stored or logged." },
+      { "title": "Server-side cart", "description": "Cart state lives on the server keyed to the session. Refreshes and re-logins don't lose state — simpler than client-side hydration tricks." },
+      { "title": "Search across menu", "description": "Live search across menu items with debounced lookup and graceful empty states." },
+      { "title": "Responsive UI", "description": "Single layout that holds up across phones, tablets, and desktops without a framework." }
+    ],
+    "challenges": [
+      {
+        "problem": "Maintaining cart state across pages without a frontend framework.",
+        "solution": "Persisted the cart server-side keyed to the session. Refreshes and re-logins don't lose state.",
+        "learning": "State doesn't have to live on the client. For request-driven apps, server-side state is often simpler and more reliable."
+      },
+      {
+        "problem": "Storing passwords safely in a learning project where it would have been easy to skip.",
+        "solution": "Used bcrypt with a sensible work factor and never stored or logged plaintext.",
+        "learning": "Security habits formed in toy projects carry over. Skipping them once makes the next compromise easier."
+      },
+      {
+        "problem": "Making a 6+ page site feel cohesive without a design system.",
+        "solution": "Extracted shared partials (header, footer, nav) and a small CSS utility set — a poor man's component library.",
+        "learning": "The principles behind component libraries are independent of any framework. You can practice them in vanilla, just less ergonomically."
+      }
+    ],
+    "outcome": "A 6+ page full-stack application with auth, cart, search, and orders shipped end-to-end — and, more importantly, a complete mental model of how a request travels from form to database and back. That intuition is still paying off two years later.",
+    "links": [],
+    "internal": false,
+    "gradient": "linear-gradient(135deg, #181410 0%, #3a2820 50%, #c9a96e 130%)",
+    "featured": false
+  }
+]

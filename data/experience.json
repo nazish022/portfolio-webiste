@@ -1,0 +1,39 @@
+[
+  {
+    "company": "Juspay",
+    "role": "Product Engineer - I",
+    "location": "Bangalore, India",
+    "period": "Nov 2024 — Present",
+    "current": true,
+    "points": [
+      "Contributing to Juspay's core Haskell-based backend powering payment flows at scale — resolving production issues, tracing bugs through distributed service boundaries, and improving system reliability.",
+      "Developed a cross-platform PureScript SDK enabling shared, type-safe business logic across Android and iOS for Card-Not-Present (CNP) payments and MFA flows — reducing platform-specific duplication significantly.",
+      "Developed Visa Pay iOS features (Swift/SwiftUI) — virtual card generation, wallet creation, and Scan-to-Pay.",
+      "Integrated REST APIs and built reusable UI components for seamless in-app user experience.",
+      "Wrote unit tests, structured logging, and error handling for critical payment flows to improve reliability and debuggability.",
+      "Participated in internal Haskell training bootcamp to understand functional programming concepts and patterns."
+    ]
+  },
+  {
+    "company": "Ernst & Young Global Limited",
+    "role": "Summer Intern",
+    "location": "Chandigarh, India",
+    "period": "May 2023 — June 2023",
+    "current": false,
+    "points": [
+      "Developed a responsive website with 6+ pages using the MERN stack.",
+      "Led the Single Window Clearance System for the Government of Himachal Pradesh, reducing processing time by 40% and increasing new business registrations by 25%."
+    ]
+  },
+  {
+    "company": "Amazon Machine Learning Summer School",
+    "role": "Apprenticeship",
+    "location": "Remote",
+    "period": "Jul 2022",
+    "current": false,
+    "points": [
+      "Acquired expertise in Supervised, Reinforcement, and Unsupervised Learning.",
+      "Ranked among the top 3000 nationwide in the ML Summer School competition."
+    ]
+  }
+]

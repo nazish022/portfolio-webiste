@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0e0e0e" />
+    <title>Project — Nazish Sheikh</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="page-detail">
+    <a class="skip-link" href="#detail-main">Skip to content</a>
+
+    <div class="progress-bar" id="progressBar" aria-hidden="true"></div>
+    <canvas id="bg-canvas" class="bg-canvas" aria-hidden="true"></canvas>
+
+    <header class="nav" id="nav">
+      <div class="nav__inner">
+        <a class="nav__brand mono" href="index.html" aria-label="Home — Nazish Sheikh">NS</a>
+        <nav class="nav__links" id="navLinks" aria-label="Primary">
+          <a href="index.html#about">About</a>
+          <a href="index.html#experience">Experience</a>
+          <a href="index.html#work">Work</a>
+          <a href="index.html#exploring">Exploring</a>
+          <a href="index.html#contact">Contact</a>
+        </nav>
+        <button
+          class="nav__toggle"
+          id="navToggle"
+          aria-label="Toggle menu"
+          aria-controls="navLinks"
+          aria-expanded="false"
+        >
+          <span></span><span></span>
+        </button>
+      </div>
+    </header>
+
+    <main id="detail-main">
+      <div id="projectRoot"></div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer__inner">
+        <span class="mono">© <span id="year"></span> Nazish Sheikh</span>
+        <span class="mono">Built with Three.js, GSAP, and a lot of italics.</span>
+      </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+    <script src="bg.js" defer></script>
+    <script src="project.js" defer></script>
+  </body>
+</html>

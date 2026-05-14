@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0e0e0e" />
+    <meta
+      name="description"
+      content="Nazish Sheikh — Product Engineer at Juspay. Payments, iOS, functional programming, and an ML-shaped curiosity."
+    />
+    <title>Nazish Sheikh — Product Engineer</title>
+
+    <!-- fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="page-home">
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- page-transition progress bar (sweeps on internal nav) -->
+    <div class="progress-bar" id="progressBar" aria-hidden="true"></div>
+
+    <!-- Three.js background canvas -->
+    <canvas id="bg-canvas" class="bg-canvas" aria-hidden="true"></canvas>
+
+    <!-- floating cursor-follow project preview -->
+    <article class="preview" id="preview" aria-hidden="true">
+      <div class="preview__bar"></div>
+      <p class="preview__num mono"></p>
+      <h3 class="preview__title"></h3>
+      <p class="preview__copy"></p>
+      <p class="preview__stack mono"></p>
+      <p class="preview__cta mono">view case study →</p>
+    </article>
+
+    <!-- toast for copy-to-clipboard -->
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <!-- nav: NS top-left, links top-right -->
+    <header class="nav" id="nav">
+      <div class="nav__inner">
+        <a class="nav__brand mono" href="#top" aria-label="Home — Nazish Sheikh">NS</a>
+        <nav class="nav__links" id="navLinks" aria-label="Primary">
+          <a href="#about">About</a>
+          <a href="#experience">Experience</a>
+          <a href="#work">Work</a>
+          <a href="#exploring">Exploring</a>
+          <a href="#contact">Contact</a>
+        </nav>
+        <button
+          class="nav__toggle"
+          id="navToggle"
+          aria-label="Toggle menu"
+          aria-controls="navLinks"
+          aria-expanded="false"
+        >
+          <span></span><span></span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- ============== HERO ============== -->
+      <section class="hero" id="top">
+        <div class="hero__inner">
+          <p class="hero__eyebrow mono" data-anim="hero-eyebrow">
+            <span>Portfolio · 2025</span>
+          </p>
+
+          <h1 class="hero__name" data-anim="hero-name">
+            <span class="hero__name-line"><span>Nazish Sheikh</span></span>
+          </h1>
+
+          <p class="hero__designation mono" data-anim="hero-designation">
+            <span class="dot"></span>
+            <span class="hero__typed" id="typed"></span>
+            <span class="hero__caret" aria-hidden="true">|</span>
+          </p>
+
+          <p class="hero__summary" data-anim="hero-summary">
+            Building reliable systems at the intersection of payments and people.
+          </p>
+
+          <div class="hero__cta" data-anim="hero-cta">
+            <a class="btn btn--outline" href="#work">
+              <span>View work</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            </a>
+            <a class="btn btn--filled" href="#contact">
+              <span>Say hello</span>
+            </a>
+          </div>
+        </div>
+
+        <a class="hero__scroll" href="#about" aria-label="Scroll to About" data-anim="hero-scroll">
+          <span class="hero__scroll-line" aria-hidden="true"></span>
+          <span class="mono">scroll</span>
+        </a>
+      </section>
+
+      <!-- ============== ABOUT — 60/40 split ============== -->
+      <section class="section about" id="about">
+        <div class="section__index mono">
+          <span>01</span>
+          <span class="section__index-label">— About</span>
+        </div>
+
+        <div class="about__grid">
+          <div class="about__left">
+            <blockquote class="about__quote" data-reveal>
+              <p>
+                I believe great software is built at the intersection of
+                <em>mathematical precision</em> and <em>human empathy</em>.
+              </p>
+            </blockquote>
+
+            <hr class="about__rule" data-reveal />
+
+            <p class="about__prose" data-reveal>
+              Product Engineer at <a href="https://juspay.in" target="_blank" rel="noopener" class="link-u">Juspay</a>,
+              working across a Haskell payments backend, a PureScript SDK
+              shared between iOS and Android, and native Swift/SwiftUI. I
+              gravitate toward type-safe systems and well-modeled state.
+            </p>
+          </div>
+
+          <aside class="about__right">
+            <dl class="kv-list" data-reveal>
+              <div class="kv">
+                <dt class="kv__k mono">Currently</dt>
+                <dd class="kv__v">Product Engineer · Juspay</dd>
+              </div>
+              <div class="kv">
+                <dt class="kv__k mono">Location</dt>
+                <dd class="kv__v">Bangalore, India</dd>
+              </div>
+              <div class="kv">
+                <dt class="kv__k mono">Education</dt>
+                <dd class="kv__v">NIT Hamirpur · B.Tech, Mathematics &amp; Scientific Computing</dd>
+              </div>
+              <div class="kv">
+                <dt class="kv__k mono">Status</dt>
+                <dd class="kv__v kv__avail">
+                  <span class="dot dot--live"></span>
+                  <span>Open to opportunities</span>
+                </dd>
+              </div>
+            </dl>
+          </aside>
+        </div>
+
+        <!-- horizontal tech ticker -->
+        <div class="ticker" aria-hidden="true">
+          <div class="ticker__track">
+            <span class="ticker__group" id="tickerA"></span>
+            <span class="ticker__group" id="tickerB"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== EXPERIENCE ============== -->
+      <section class="section experience" id="experience">
+        <div class="section__index mono">
+          <span>02</span>
+          <span class="section__index-label">— Experience</span>
+        </div>
+        <span class="watermark" aria-hidden="true">EXP</span>
+        <h2 class="section__title" data-reveal>Where I've worked.</h2>
+
+        <ol class="timeline" id="timeline" aria-label="Work experience"></ol>
+      </section>
+
+      <!-- ============== WORK ============== -->
+      <section class="section work" id="work">
+        <div class="section__index mono">
+          <span>03</span>
+          <span class="section__index-label">— Work</span>
+        </div>
+        <span class="watermark" aria-hidden="true">WORK</span>
+        <h2 class="section__title" data-reveal>Selected projects.</h2>
+
+        <ol class="work-list" id="workList" aria-label="Selected projects"></ol>
+
+        <p class="work__hint mono" data-reveal>
+          → To add a project, append to <code>data/projects.json</code>.
+          The list and detail pages update automatically.
+        </p>
+      </section>
+
+      <!-- ============== EXPLORING ============== -->
+      <section class="section exploring" id="exploring">
+        <div class="section__index mono">
+          <span>04</span>
+          <span class="section__index-label">— Exploring</span>
+        </div>
+        <span class="watermark watermark--sigma" aria-hidden="true">∑</span>
+
+        <h2 class="section__title" data-reveal>Where curiosity is leading me.</h2>
+        <p class="exploring__sub" data-reveal>
+          Beyond shipping code, I'm drawn to the mathematics that powers
+          intelligent systems.
+        </p>
+
+        <div class="explore-grid">
+          <article class="explore-card" data-reveal>
+            <div class="explore-card__icon" aria-hidden="true">
+              <!-- bell curve -->
+              <svg viewBox="0 0 80 60" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5,52 C18,52 22,46 32,20 C36,8 44,8 48,20 C58,46 62,52 75,52" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                <line x1="3" y1="52" x2="77" y2="52" stroke="currentColor" stroke-width="1" opacity="0.6"/>
+                <line x1="40" y1="52" x2="40" y2="14" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.55"/>
+                <circle cx="40" cy="52" r="1.4" fill="currentColor"/>
+              </svg>
+            </div>
+            <h3>Statistics &amp; Probability</h3>
+            <p>
+              Foundations of uncertainty — distributions, inference, and
+              Bayesian thinking.
+            </p>
+          </article>
+
+          <article class="explore-card" data-reveal>
+            <div class="explore-card__icon" aria-hidden="true">
+              <!-- neural net -->
+              <svg viewBox="0 0 80 60" xmlns="http://www.w3.org/2000/svg">
+                <g stroke="currentColor" stroke-width="0.7" opacity="0.45">
+                  <line x1="14" y1="18" x2="40" y2="14"/>
+                  <line x1="14" y1="18" x2="40" y2="30"/>
+                  <line x1="14" y1="18" x2="40" y2="46"/>
+                  <line x1="14" y1="42" x2="40" y2="14"/>
+                  <line x1="14" y1="42" x2="40" y2="30"/>
+                  <line x1="14" y1="42" x2="40" y2="46"/>
+                  <line x1="40" y1="14" x2="66" y2="24"/>
+                  <line x1="40" y1="14" x2="66" y2="40"/>
+                  <line x1="40" y1="30" x2="66" y2="24"/>
+                  <line x1="40" y1="30" x2="66" y2="40"/>
+                  <line x1="40" y1="46" x2="66" y2="24"/>
+                  <line x1="40" y1="46" x2="66" y2="40"/>
+                </g>
+                <g fill="currentColor">
+                  <circle cx="14" cy="18" r="2.2"/>
+                  <circle cx="14" cy="42" r="2.2"/>
+                  <circle cx="40" cy="14" r="2.2"/>
+                  <circle cx="40" cy="30" r="2.2"/>
+                  <circle cx="40" cy="46" r="2.2"/>
+                  <circle cx="66" cy="24" r="2.2"/>
+                  <circle cx="66" cy="40" r="2.2"/>
+                </g>
+              </svg>
+            </div>
+            <h3>Machine Learning</h3>
+            <p>
+              Supervised learning, loss functions, optimization — understanding
+              the engine.
+            </p>
+          </article>
+
+          <article class="explore-card" data-reveal>
+            <div class="explore-card__icon" aria-hidden="true">
+              <!-- maze / grid for RL -->
+              <svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                <g stroke="currentColor" stroke-width="1" fill="none">
+                  <rect x="6" y="6" width="48" height="48"/>
+                  <line x1="18" y1="6" x2="18" y2="54"/>
+                  <line x1="30" y1="6" x2="30" y2="54"/>
+                  <line x1="42" y1="6" x2="42" y2="54"/>
+                  <line x1="6" y1="18" x2="54" y2="18"/>
+                  <line x1="6" y1="30" x2="54" y2="30"/>
+                  <line x1="6" y1="42" x2="54" y2="42"/>
+                </g>
+                <g stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none">
+                  <line x1="18" y1="6" x2="18" y2="30"/>
+                  <line x1="30" y1="18" x2="42" y2="18"/>
+                  <line x1="30" y1="42" x2="30" y2="54"/>
+                </g>
+                <circle cx="12" cy="48" r="2.6" fill="currentColor"/>
+                <path d="M48,12 l-2.4,2.4 l2.4,2.4 l2.4,-2.4 z" fill="currentColor"/>
+              </svg>
+            </div>
+            <h3>Reinforcement Learning</h3>
+            <p>
+              Agents, rewards, and policies — learning through interaction
+              fascinates me most.
+            </p>
+          </article>
+
+          <article class="explore-card explore-card--wide" data-reveal>
+            <div class="explore-card__icon" aria-hidden="true">
+              <!-- linalg & calculus: matrix + gradient arrow -->
+              <svg viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
+                <g stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round">
+                  <path d="M10,8 L4,8 L4,52 L10,52"/>
+                  <path d="M40,8 L46,8 L46,52 L40,52"/>
+                </g>
+                <g fill="currentColor">
+                  <circle cx="14" cy="20" r="1.4"/>
+                  <circle cx="25" cy="20" r="1.4"/>
+                  <circle cx="36" cy="20" r="1.4"/>
+                  <circle cx="14" cy="30" r="1.4"/>
+                  <circle cx="25" cy="30" r="1.4"/>
+                  <circle cx="36" cy="30" r="1.4"/>
+                  <circle cx="14" cy="40" r="1.4"/>
+                  <circle cx="25" cy="40" r="1.4"/>
+                  <circle cx="36" cy="40" r="1.4"/>
+                </g>
+                <text x="58" y="36" fill="currentColor" font-family="Cormorant Garamond, serif" font-style="italic" font-size="22">∇f</text>
+                <g stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round">
+                  <line x1="80" y1="48" x2="95" y2="18"/>
+                  <polyline points="91,18 95,18 95,22"/>
+                </g>
+              </svg>
+            </div>
+            <div class="explore-card__body">
+              <h3>Linear Algebra &amp; Calculus for Deep Learning</h3>
+              <p>
+                Gradients, transformations, and the geometry of high-dimensional
+                spaces — the language deep learning is written in.
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ============== SKILLS ============== -->
+      <section class="section skills" id="skills">
+        <div class="section__index mono">
+          <span>05</span>
+          <span class="section__index-label">— Skills</span>
+        </div>
+        <span class="watermark watermark--code" aria-hidden="true">&lt;/&gt;</span>
+
+        <h2 class="section__title" data-reveal>Tools of the trade.</h2>
+        <div class="skills__grid" id="skillsRoot"></div>
+
+        <div class="achievements" data-reveal>
+          <h3 class="achievements__head mono">Achievements</h3>
+          <ul>
+            <li>Solved <strong>450+</strong> problems across competitive programming platforms.</li>
+            <li>Selected for <strong>Amazon ML Summer School 2022</strong> — top 3000 nationwide.</li>
+            <li><strong>NIT Hamirpur</strong> — B.Tech, Mathematics &amp; Scientific Computing — CGPI 8.55 / 10.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============== CONTACT ============== -->
+      <section class="section contact" id="contact">
+        <div class="section__index mono">
+          <span>06</span>
+          <span class="section__index-label">— Contact</span>
+        </div>
+
+        <h2 class="contact__headline" data-reveal>
+          Let's build<br />
+          <em>something.</em>
+        </h2>
+        <p class="contact__sub" data-reveal>
+          I'm open to product engineering roles and ML-adjacent work.
+          Always happy to talk about payments, FP, or what makes a system
+          worth trusting.
+        </p>
+
+        <button
+          class="contact__email mono"
+          id="copyEmail"
+          type="button"
+          data-email="nazishsheikh86@gmail.com"
+          data-reveal
+        >
+          <span>nazishsheikh86@gmail.com</span>
+          <span class="contact__email-cue mono">click to copy</span>
+        </button>
+
+        <ul class="contact__socials" data-reveal>
+          <li>
+            <a href="https://github.com/nazish-sheikh" target="_blank" rel="noopener" class="link-u">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2A10 10 0 002 12c0 4.4 2.9 8.2 6.8 9.5.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.1-1.1-1.4-1.1-1.4-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.3-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1a9.4 9.4 0 015 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.7.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.8v2.6c0 .3.2.6.7.5A10 10 0 0022 12 10 10 0 0012 2z"/></svg>
+              <span>GitHub · nazish-sheikh</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://linkedin.com/in/nazish-sheikh" target="_blank" rel="noopener" class="link-u">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 2h-17A1.5 1.5 0 002 3.5v17A1.5 1.5 0 003.5 22h17a1.5 1.5 0 001.5-1.5v-17A1.5 1.5 0 0020.5 2zM8 19H5V8h3v11zM6.5 6.7A1.7 1.7 0 116.5 3.3a1.7 1.7 0 010 3.4zM19 19h-3v-5.6c0-1.4-.5-2.3-1.7-2.3-.9 0-1.5.6-1.7 1.2-.1.2-.1.5-.1.8V19h-3V8h3v1.3a3 3 0 012.7-1.5c2 0 3.5 1.3 3.5 4V19z"/></svg>
+              <span>LinkedIn · nazish-sheikh</span>
+            </a>
+          </li>
+          <li>
+            <a href="tel:+917876745979" class="link-u">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3.1-8.7A2 2 0 014 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.6a2 2 0 01-.5 2.1L7.9 9.6a16 16 0 006 6l1.2-1.2a2 2 0 012-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg>
+              <span>+91 78767 45979</span>
+            </a>
+          </li>
+        </ul>
+
+        <!--
+          Replace YOUR_FORM_ID below with your Formspree form id (https://formspree.io).
+          Until you do, submitting will show a friendly message in-line.
+        -->
+        <form
+          class="contact-form"
+          id="contactForm"
+          action="https://formspree.io/f/YOUR_FORM_ID"
+          method="POST"
+          novalidate
+          data-reveal
+        >
+          <div class="cf-field">
+            <label for="cf-name" class="mono">Name</label>
+            <input id="cf-name" name="name" type="text" required autocomplete="name" />
+          </div>
+          <div class="cf-field">
+            <label for="cf-email" class="mono">Email</label>
+            <input id="cf-email" name="email" type="email" required autocomplete="email" />
+          </div>
+          <div class="cf-field">
+            <label for="cf-message" class="mono">Message</label>
+            <textarea id="cf-message" name="message" rows="3" required></textarea>
+          </div>
+          <div class="cf-actions">
+            <button type="submit" class="cf-submit mono">
+              <span>Send</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            </button>
+            <span class="cf-status mono" id="formStatus" aria-live="polite"></span>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer__inner">
+        <span class="mono">© <span id="year"></span> Nazish Sheikh</span>
+        <span class="mono">Built with Three.js, GSAP, and a lot of italics.</span>
+      </div>
+    </footer>
+
+    <!-- vendor libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/typed.js@2.1.0/dist/typed.umd.js" defer></script>
+    <!-- app -->
+    <script src="bg.js" defer></script>
+    <script src="script.js" defer></script>
+  </body>
+</html>
