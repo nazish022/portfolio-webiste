@@ -26,6 +26,52 @@
 
   const PRM = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const POINTER_FINE = matchMedia("(pointer: fine)").matches;
+  const HOVER_ABLE = matchMedia("(hover: hover)").matches;
+
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  /* =================================================================
+     CUSTOM CURSOR — dot + lerp-following ring, mix-blend
+  ================================================================= */
+  function initCursor() {
+    if (PRM || !HOVER_ABLE || !POINTER_FINE) return;
+
+    const dot = document.createElement("div");
+    dot.className = "cursor-dot";
+    const ring = document.createElement("div");
+    ring.className = "cursor-ring";
+    document.body.append(dot, ring);
+    document.documentElement.classList.add("has-cursor");
+
+    const m = { x: innerWidth / 2, y: innerHeight / 2 };
+    const r = { x: m.x, y: m.y };
+    const d = { x: m.x, y: m.y };
+
+    addEventListener("pointermove", (e) => {
+      m.x = e.clientX;
+      m.y = e.clientY;
+    }, { passive: true });
+
+    function tick() {
+      d.x = lerp(d.x, m.x, 0.55);
+      d.y = lerp(d.y, m.y, 0.55);
+      r.x = lerp(r.x, m.x, 0.18);
+      r.y = lerp(r.y, m.y, 0.18);
+      dot.style.transform = `translate3d(${d.x}px, ${d.y}px, 0) translate(-50%, -50%)`;
+      ring.style.transform = `translate3d(${r.x}px, ${r.y}px, 0) translate(-50%, -50%)`;
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+
+    const interactiveSel = 'a, button, input, textarea, .work-card, .skill-tag, .explore-card, .contact__email, .work-card__title, .kf-card, .tech-list__item, .detail-stack__badge';
+    document.addEventListener("pointerover", (e) => {
+      if (e.target.closest(interactiveSel)) document.documentElement.classList.add("cursor-hover");
+    });
+    document.addEventListener("pointerout", (e) => {
+      if (e.target.closest(interactiveSel)) document.documentElement.classList.remove("cursor-hover");
+    });
+    addEventListener("blur", () => document.documentElement.classList.remove("cursor-hover"));
+  }
 
   async function loadJSON(path) {
     const res = await fetch(path, { cache: "no-cache" });
@@ -89,21 +135,14 @@
   ================================================================= */
   function initHero() {
     const designation = $("#typed");
-    const phrases = [
-      "Product Engineer",
-      "Functional Programmer",
-      "iOS Developer",
-      "ML Enthusiast",
-    ];
+    const phrases = ["Software Developer"];
 
     if (designation && window.Typed && !PRM) {
       new window.Typed("#typed", {
         strings: phrases,
         typeSpeed: 60,
-        backSpeed: 30,
-        backDelay: 2000,
         startDelay: 1100, // line up with the GSAP entrance
-        loop: true,
+        loop: false,      // type once and stay
         showCursor: false, // CSS handles the caret
       });
     } else if (designation) {
@@ -121,6 +160,12 @@
         .from(".hero__eyebrow", { opacity: 0, y: 14, duration: 0.7 }, "-=0.95")
         .from(".hero__designation", { opacity: 0, y: 14, duration: 0.7 }, "-=0.55")
         .from(".hero__summary", { opacity: 0, y: 14, duration: 0.7 }, "-=0.4")
+        .from(".hero__meta .hero__meta-item", {
+          opacity: 0,
+          y: 10,
+          duration: 0.55,
+          stagger: 0.1,
+        }, "-=0.4")
         .from(".hero__cta .btn", {
           opacity: 0,
           scale: 0.92,

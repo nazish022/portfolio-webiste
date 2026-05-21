@@ -1,12 +1,11 @@
 /* =================================================================
    bg.js — shared Three.js background
-   Three layers, composed in a single scene:
-     1. Dim particle field   — 160 small gold dots, cursor-repelled, spring-back
-     2. Watery bubble field  — ~60 soft sprite "bubbles" rising upward,
-                               gently wobbling, cursor pushes them aside
-     3. Wireframe shapes     — 3 large slow-rotating geometries deep in space
-   Cursor world-position is smoothed (lerp) so the influence flows
-   like a finger trailing through water rather than snapping to the mouse.
+   Three layers:
+     1. Dim particle field  — ambient drift, no cursor interaction
+     2. Constellation lines — faint segments between nearby particles
+                              fade in/out as particles drift
+     3. Wireframe shapes    — 3 large slow-rotating geometries in depth
+   FPS-capped to ~30 for perf. Renders pause when the tab is hidden.
 ================================================================= */
 
 (() => {
@@ -19,28 +18,21 @@
   const isMobile = matchMedia("(max-width: 760px)").matches;
 
   /* ---------- knobs ---------- */
-  const PARTICLE_COUNT = isMobile ? 90 : 160;
-  const BUBBLE_COUNT = isMobile ? 28 : 60;
+  const PARTICLE_COUNT = isMobile ? 50 : 90;
+  const LINK_DIST = 1.8;          // world-units: max distance to draw a link
+  const LINK_DIST_SQ = LINK_DIST * LINK_DIST;
+  const MAX_LINKS = isMobile ? 80 : 200;
 
-  const COLOR = 0xc9a96e;
+  const COLOR = 0xc9a96e; // warm gold to match palette
 
-  // dim dot field
-  const D_SIZE = 0.055;
-  const D_OPACITY = 0.26;
-  const D_REPEL = 1.5;          // world units
-  const D_REPEL_STRENGTH = 0.07;
-  const D_SPRING = 0.02;        // per spec
-  const D_DAMP = 0.93;
-
-  // bubble layer
-  const B_REPEL = 2.4;          // bigger reach for water feel
-  const B_REPEL_STRENGTH = 0.085;
-  const B_PUSH_DECAY = 0.93;
-  const B_RISE_MIN = 0.0035;
-  const B_RISE_MAX = 0.014;
+  // particle field
+  const D_SIZE = 0.045;
+  const D_OPACITY = 0.55;
+  const D_SPRING = 0.012;
+  const D_DAMP = 0.94;
 
   // wireframe shapes
-  const SHAPE_OPACITY = 0.07;
+  const SHAPE_OPACITY = 0.05;
 
   /* ---------- scene ---------- */
   const scene = new THREE.Scene();
@@ -65,46 +57,7 @@
     return { w, h };
   }
 
-  /* ---------- bubble sprite (canvas-generated) ----------
-     a soft ring + faint inner fill + small upper-left highlight.
-     looks like a glassy bubble at any size.
-  -------------------------------------------------------- */
-  function makeBubbleTexture() {
-    const c = document.createElement("canvas");
-    c.width = c.height = 128;
-    const ctx = c.getContext("2d");
-
-    // soft ring (membrane)
-    const ring = ctx.createRadialGradient(64, 64, 22, 64, 64, 60);
-    ring.addColorStop(0.0, "rgba(201, 169, 110, 0)");
-    ring.addColorStop(0.55, "rgba(201, 169, 110, 0.55)");
-    ring.addColorStop(0.85, "rgba(229, 200, 140, 0.28)");
-    ring.addColorStop(1.0, "rgba(201, 169, 110, 0)");
-    ctx.fillStyle = ring;
-    ctx.fillRect(0, 0, 128, 128);
-
-    // very faint inner fill — gives the bubble a body
-    const inner = ctx.createRadialGradient(64, 64, 0, 64, 64, 50);
-    inner.addColorStop(0.0, "rgba(201, 169, 110, 0.10)");
-    inner.addColorStop(1.0, "rgba(201, 169, 110, 0)");
-    ctx.fillStyle = inner;
-    ctx.fillRect(0, 0, 128, 128);
-
-    // upper-left highlight — sells the "glassy" feel
-    const hl = ctx.createRadialGradient(46, 42, 0, 46, 42, 22);
-    hl.addColorStop(0.0, "rgba(255, 240, 210, 0.6)");
-    hl.addColorStop(1.0, "rgba(255, 240, 210, 0)");
-    ctx.fillStyle = hl;
-    ctx.fillRect(0, 0, 128, 128);
-
-    const tex = new THREE.CanvasTexture(c);
-    tex.minFilter = THREE.LinearFilter;
-    tex.magFilter = THREE.LinearFilter;
-    return tex;
-  }
-  const bubbleTex = makeBubbleTexture();
-
-  /* ---------- 1. dim particle field ---------- */
+  /* ---------- particle field (drives both points + constellation) ---------- */
   const dPositions = new Float32Array(PARTICLE_COUNT * 3);
   const dOrigins = new Float32Array(PARTICLE_COUNT * 3);
   const dVel = new Float32Array(PARTICLE_COUNT * 3);
@@ -112,7 +65,7 @@
 
   function seedDots() {
     const { w, h } = viewportAt(0);
-    const spread = 1.2;
+    const spread = 1.15;
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const i3 = i * 3;
       const x = (Math.random() - 0.5) * w * spread;
@@ -123,7 +76,7 @@
       dOrigins[i3 + 2] = dPositions[i3 + 2] = z;
       dVel[i3] = dVel[i3 + 1] = dVel[i3 + 2] = 0;
       dDrift[i * 2] = Math.random() * Math.PI * 2;
-      dDrift[i * 2 + 1] = 0.0006 + Math.random() * 0.0008;
+      dDrift[i * 2 + 1] = 0.0005 + Math.random() * 0.0009;
     }
   }
   seedDots();
@@ -141,51 +94,30 @@
   const dots = new THREE.Points(dGeom, dMat);
   scene.add(dots);
 
-  /* ---------- 2. bubble field — rising + wobble + push ---------- */
-  // we keep bubble metadata in a parallel array, then write final
-  // x,y,z into the BufferAttribute every frame.
-  const bPositions = new Float32Array(BUBBLE_COUNT * 3);
-  const bubbles = []; // metadata
-
-  function makeBubble(spawnAtBottom) {
-    const { w, h } = viewportAt(0);
-    return {
-      baseX: (Math.random() - 0.5) * w * 1.2,
-      // when spawning fresh, distribute throughout the column;
-      // when recycling, start just below the visible bottom
-      y: spawnAtBottom ? -h * 0.55 - Math.random() * 0.6 : (Math.random() - 0.5) * h,
-      z: -0.4 + Math.random() * 1.4, // varied depth → varied apparent size
-      rise: B_RISE_MIN + Math.random() * (B_RISE_MAX - B_RISE_MIN),
-      // ambient horizontal wobble
-      wobAmp: 0.08 + Math.random() * 0.22,
-      wobFreq: 0.0007 + Math.random() * 0.0014,
-      wobPhase: Math.random() * Math.PI * 2,
-      // cursor-induced offset (decays back to 0)
-      pushX: 0,
-      pushY: 0,
-    };
-  }
-  for (let i = 0; i < BUBBLE_COUNT; i++) {
-    bubbles.push(makeBubble(false));
-  }
-
-  const bGeom = new THREE.BufferGeometry();
-  bGeom.setAttribute("position", new THREE.BufferAttribute(bPositions, 3));
-  const bMat = new THREE.PointsMaterial({
-    map: bubbleTex,
-    size: 0.55,
-    sizeAttenuation: true,
+  /* ---------- constellation lines ---------- */
+  // Preallocate vertex + color buffers for MAX_LINKS segments.
+  // Each segment uses 2 verts × 3 floats. We rewrite the slice
+  // every frame; unused tail vertices get zeroed out.
+  const linePositions = new Float32Array(MAX_LINKS * 2 * 3);
+  const lineColors = new Float32Array(MAX_LINKS * 2 * 3);
+  const lineGeom = new THREE.BufferGeometry();
+  lineGeom.setAttribute("position", new THREE.BufferAttribute(linePositions, 3));
+  lineGeom.setAttribute("color", new THREE.BufferAttribute(lineColors, 3));
+  const lineMat = new THREE.LineBasicMaterial({
+    vertexColors: true,
     transparent: true,
-    opacity: 0.62,
-    alphaTest: 0.001,
+    opacity: 0.55,
     depthWrite: false,
-    // additive: slight bloom where bubbles overlap — looks like light through water
-    blending: THREE.AdditiveBlending,
   });
-  const bubblePoints = new THREE.Points(bGeom, bMat);
-  scene.add(bubblePoints);
+  const constellation = new THREE.LineSegments(lineGeom, lineMat);
+  scene.add(constellation);
 
-  /* ---------- 3. wireframe shapes (depth) ---------- */
+  // gold rgb (0..1) for line vertex colors
+  const COLOR_R = 0xc9 / 255;
+  const COLOR_G = 0xa9 / 255;
+  const COLOR_B = 0x6e / 255;
+
+  /* ---------- wireframe shapes (depth) ---------- */
   const shapeMat = {
     color: COLOR,
     wireframe: true,
@@ -201,7 +133,7 @@
     );
     ico.position.set(-3.6, 1.6, -4);
     scene.add(ico);
-    shapes.push({ mesh: ico, rot: { x: 0.0006, y: 0.0008 } });
+    shapes.push({ mesh: ico, rot: { x: 0.0005, y: 0.0007 } });
 
     const knot = new THREE.Mesh(
       new THREE.TorusKnotGeometry(1.4, 0.32, 64, 8),
@@ -209,7 +141,7 @@
     );
     knot.position.set(3.8, -1.4, -5);
     scene.add(knot);
-    shapes.push({ mesh: knot, rot: { x: 0.0008, y: 0.0005 } });
+    shapes.push({ mesh: knot, rot: { x: 0.0006, y: 0.0004 } });
 
     const octa = new THREE.Mesh(
       new THREE.OctahedronGeometry(1.2, 0),
@@ -217,35 +149,7 @@
     );
     octa.position.set(0.4, -2.6, -7);
     scene.add(octa);
-    shapes.push({ mesh: octa, rot: { x: 0.0004, y: 0.0006 } });
-  }
-
-  /* ---------- pointer → smoothed world position ---------- */
-  const ndc = new THREE.Vector2(-10, -10);
-  const cursorTarget = new THREE.Vector3();
-  const cursorWorld = new THREE.Vector3(0, 9999, 0);
-  const ray = new THREE.Raycaster();
-  const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-  let pointerActive = false;
-
-  addEventListener("pointermove", (e) => {
-    ndc.x = (e.clientX / innerWidth) * 2 - 1;
-    ndc.y = -(e.clientY / innerHeight) * 2 + 1;
-    pointerActive = true;
-  }, { passive: true });
-  addEventListener("pointerleave", () => { pointerActive = false; });
-  addEventListener("blur", () => { pointerActive = false; });
-
-  function updateCursor() {
-    if (!pointerActive) {
-      // smoothly retreat the influence point off-screen so particles unwind
-      cursorWorld.lerp(new THREE.Vector3(9999, 9999, 0), 0.05);
-      return;
-    }
-    ray.setFromCamera(ndc, camera);
-    ray.ray.intersectPlane(plane, cursorTarget);
-    // lerp the *influence point* toward the actual cursor — gives water-like trail
-    cursorWorld.lerp(cursorTarget, 0.18);
+    shapes.push({ mesh: octa, rot: { x: 0.0003, y: 0.0005 } });
   }
 
   /* ---------- resize ---------- */
@@ -257,107 +161,99 @@
       camera.updateProjectionMatrix();
       renderer.setSize(innerWidth, innerHeight, false);
       seedDots();
-      // re-seed bubbles too so they fill the new column width
-      for (let i = 0; i < BUBBLE_COUNT; i++) bubbles[i] = makeBubble(false);
       dGeom.attributes.position.needsUpdate = true;
     });
   });
 
-  /* ---------- animation loop ---------- */
+  /* ---------- visibility — pause when hidden ---------- */
+  let visible = !document.hidden;
+  document.addEventListener("visibilitychange", () => { visible = !document.hidden; });
+
+  /* ---------- animation loop — capped to ~30fps ---------- */
   let frame = 0;
-  function tick() {
+  let lastT = 0;
+  const FRAME_MS = 1000 / 30;
+
+  function tick(now) {
+    if (!visible) {
+      if (!PRM) requestAnimationFrame(tick);
+      return;
+    }
+    const dt = now - lastT;
+    if (dt < FRAME_MS) {
+      if (!PRM) requestAnimationFrame(tick);
+      return;
+    }
+    lastT = now - (dt % FRAME_MS);
     frame++;
-    updateCursor();
     const t = frame;
 
-    /* ---- dim dots ---- */
-    {
-      const radSq = D_REPEL * D_REPEL;
-      for (let i = 0; i < PARTICLE_COUNT; i++) {
-        const i3 = i * 3;
-        const px = dPositions[i3];
-        const py = dPositions[i3 + 1];
+    /* ---- particles: gentle ambient drift back to origin ---- */
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const i3 = i * 3;
+      const phase = dDrift[i * 2];
+      const speed = dDrift[i * 2 + 1];
+      dVel[i3]     += Math.sin(t * speed + phase) * 0.0008;
+      dVel[i3 + 1] += Math.cos(t * speed + phase) * 0.0008;
 
-        if (pointerActive) {
-          const dx = px - cursorWorld.x;
-          const dy = py - cursorWorld.y;
-          const dSq = dx * dx + dy * dy;
-          if (dSq < radSq && dSq > 0.0001) {
-            const d = Math.sqrt(dSq);
-            const f = (1 - d / D_REPEL) * D_REPEL_STRENGTH;
-            dVel[i3] += (dx / d) * f;
-            dVel[i3 + 1] += (dy / d) * f;
-          }
-        }
+      dVel[i3]     += (dOrigins[i3]     - dPositions[i3])     * D_SPRING;
+      dVel[i3 + 1] += (dOrigins[i3 + 1] - dPositions[i3 + 1]) * D_SPRING;
 
-        const phase = dDrift[i * 2];
-        const speed = dDrift[i * 2 + 1];
-        dVel[i3] += Math.sin(t * speed + phase) * 0.0009;
-        dVel[i3 + 1] += Math.cos(t * speed + phase) * 0.0009;
+      dVel[i3]     *= D_DAMP;
+      dVel[i3 + 1] *= D_DAMP;
 
-        dVel[i3] += (dOrigins[i3] - px) * D_SPRING;
-        dVel[i3 + 1] += (dOrigins[i3 + 1] - py) * D_SPRING;
-
-        dVel[i3] *= D_DAMP;
-        dVel[i3 + 1] *= D_DAMP;
-
-        dPositions[i3] += dVel[i3];
-        dPositions[i3 + 1] += dVel[i3 + 1];
-      }
-      dGeom.attributes.position.needsUpdate = true;
+      dPositions[i3]     += dVel[i3];
+      dPositions[i3 + 1] += dVel[i3 + 1];
     }
+    dGeom.attributes.position.needsUpdate = true;
 
-    /* ---- bubbles: rise, wobble, push, recycle ---- */
-    {
-      const { h } = viewportAt(0);
-      const topEdge = h * 0.55 + 0.4;
-      const bottomEdge = -h * 0.55 - 0.6;
-      const radSq = B_REPEL * B_REPEL;
+    /* ---- constellation: link nearby particles, alpha by distance ---- */
+    let lineCount = 0;
+    for (let i = 0; i < PARTICLE_COUNT && lineCount < MAX_LINKS; i++) {
+      const i3 = i * 3;
+      const ix = dPositions[i3];
+      const iy = dPositions[i3 + 1];
+      const iz = dPositions[i3 + 2];
+      for (let j = i + 1; j < PARTICLE_COUNT && lineCount < MAX_LINKS; j++) {
+        const j3 = j * 3;
+        const dx = ix - dPositions[j3];
+        const dy = iy - dPositions[j3 + 1];
+        const dSq = dx * dx + dy * dy;
+        if (dSq > LINK_DIST_SQ) continue;
 
-      for (let i = 0; i < BUBBLE_COUNT; i++) {
-        const b = bubbles[i];
+        const k = lineCount * 6; // 2 verts × 3 floats
+        linePositions[k]     = ix;
+        linePositions[k + 1] = iy;
+        linePositions[k + 2] = iz;
+        linePositions[k + 3] = dPositions[j3];
+        linePositions[k + 4] = dPositions[j3 + 1];
+        linePositions[k + 5] = dPositions[j3 + 2];
 
-        // rise
-        b.y += b.rise;
+        // alpha fades quadratically with distance — looks soft
+        const fade = 1 - dSq / LINK_DIST_SQ;
+        const a = fade * fade;
+        // bake alpha into the color (multiplied by opacity in material)
+        const r = COLOR_R * a;
+        const g = COLOR_G * a;
+        const b = COLOR_B * a;
+        lineColors[k]     = r;
+        lineColors[k + 1] = g;
+        lineColors[k + 2] = b;
+        lineColors[k + 3] = r;
+        lineColors[k + 4] = g;
+        lineColors[k + 5] = b;
 
-        // ambient horizontal wobble — gives the floaty feel
-        const wobble = Math.sin(t * b.wobFreq + b.wobPhase) * b.wobAmp;
-        const baseX = b.baseX + wobble;
-        const baseY = b.y;
-
-        // cursor displacement (additive, decaying — like a brief shove)
-        if (pointerActive) {
-          const dx = baseX + b.pushX - cursorWorld.x;
-          const dy = baseY + b.pushY - cursorWorld.y;
-          const dSq = dx * dx + dy * dy;
-          if (dSq < radSq && dSq > 0.0001) {
-            const d = Math.sqrt(dSq);
-            const f = (1 - d / B_REPEL) * B_REPEL_STRENGTH;
-            b.pushX += (dx / d) * f;
-            b.pushY += (dy / d) * f;
-          }
-        }
-        b.pushX *= B_PUSH_DECAY;
-        b.pushY *= B_PUSH_DECAY;
-
-        const finalX = baseX + b.pushX;
-        const finalY = baseY + b.pushY;
-
-        const i3 = i * 3;
-        bPositions[i3] = finalX;
-        bPositions[i3 + 1] = finalY;
-        bPositions[i3 + 2] = b.z;
-
-        // recycle once it leaves the top
-        if (b.y > topEdge) {
-          const fresh = makeBubble(true);
-          // keep z roughly stable for visual continuity
-          fresh.z = b.z;
-          bubbles[i] = fresh;
-        }
+        lineCount++;
       }
-      bGeom.attributes.position.needsUpdate = true;
     }
+    // zero unused tail so leftover segments aren't drawn at origin
+    for (let k = lineCount * 6; k < linePositions.length; k++) {
+      linePositions[k] = 0;
+      lineColors[k] = 0;
+    }
+    lineGeom.setDrawRange(0, lineCount * 2);
+    lineGeom.attributes.position.needsUpdate = true;
+    lineGeom.attributes.color.needsUpdate = true;
 
     /* ---- shapes ---- */
     for (const s of shapes) {
@@ -369,7 +265,6 @@
     if (!PRM) requestAnimationFrame(tick);
   }
 
-  // initial render even under reduced-motion
   renderer.render(scene, camera);
   if (!PRM) requestAnimationFrame(tick);
 })();

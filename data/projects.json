@@ -7,39 +7,40 @@
     "tagline": "Virtual cards, wallets, and Scan-to-Pay on iOS for Visa's Pay-By-Wallet platform.",
     "stack": ["Swift", "SwiftUI", "REST APIs"],
     "tags": ["iOS", "Swift", "SwiftUI", "Payments"],
-    "overview": "An iOS application built for Visa's Pay-By-Wallet (PBW) platform — provisioning virtual cards on demand, managing wallet contents, and paying merchants via Scan-to-Pay. The app sits on top of Juspay's payments infrastructure and integrates a wide REST API surface across card lifecycle, authentication, and settlement.",
-    "overviewExtra": "I owned the iOS feature set end-to-end — from API integration and state design to a small SwiftUI design system that's now used across new Visa features beyond PBW.",
-    "problem": "Visa needed a polished iOS surface for PBW. The challenge wasn't the feature list — it was making multi-step flows feel inevitable: interruption-safe, error-honest, and quick on slow networks.",
-    "approach": "I treated each flow as an explicit finite state machine and let SwiftUI render off the state, never the reverse. Network errors, backgrounding, and low-signal conditions all turn into legible UI states instead of crashes or frozen screens. Reusable primitives (buttons, sheets, form rows) compose into screens so feature dev moves at design speed.",
+    "overview": "An iOS SDK family powering Visa's Pay-By-Wallet (PBW) on Juspay's payments infrastructure. The codebase is split into modular SDKs — VisaPaySDK (core domain + services), VisaPayUISDK (UI layer), VisaPayCommon, and a dedicated VisaPayLogger — with a demo host (PBWDemo) used for integration testing and CI builds.",
+    "overviewExtra": "I work across the iOS layer end-to-end — API integration, state design, and reusable SwiftUI primitives shared between screens.",
+    "problem": "Visa needed an iOS surface for PBW where multi-step flows feel inevitable: interruption-safe across backgrounding, error-honest, and quick on slow networks. The system also had to be modular enough that host apps embed only what they need.",
+    "approach": "Clean architecture split across modules — Domain models, Data (Local + Remote) repositories, a Service layer, and a DI container. Every external dependency sits behind a protocol, so the test target leans on a wide set of mocks (session, vault, crypto, scheduler, repositories). The UI SDK consumes the core SDK through these interfaces, which lets flows be rendered from state alone.",
     "techChoices": [
-      { "tech": "Swift + SwiftUI", "reason": "Native composition beats UIKit bridges for design-led product work — primitives moved fast and stayed accessible." },
-      { "tech": "Combine", "reason": "Reactive state pipelines without leaking subscriptions across views." },
-      { "tech": "URLSession over Alamofire", "reason": "Fewer dependencies, full control over retry and error semantics in a payments context." }
+      { "tech": "Swift + SwiftUI", "reason": "Native composition for design-led product work — primitives moved fast and stayed accessible." },
+      { "tech": "Protocol-oriented services + DI", "reason": "Every service has a mockable protocol; the test target leans on a deep set of mocks to keep the SDK independently testable." },
+      { "tech": "URLSession over Alamofire", "reason": "Fewer dependencies, full control over retry and error semantics in a payments context." },
+      { "tech": "Dedicated logger framework", "reason": "VisaPayLogger ships as its own module — categories, levels, encryption, dispatch, persistence — so each host configures destinations independently." }
     ],
     "keyFeatures": [
-      { "title": "Virtual card provisioning", "description": "On-demand card generation with secure tokenization and full lifecycle management — issue, freeze, replace." },
-      { "title": "Wallet creation & management", "description": "Create, fund, and manage digital wallets with balance tracking, transaction history, and lifecycle events." },
-      { "title": "Scan-to-Pay flow", "description": "QR capture with merchant verification, malformed-payload handling, and a recoverable error surface for every failure mode." },
-      { "title": "SwiftUI design system", "description": "A small set of buttons, sheets, and form rows. New screens compose from primitives — feature dev time dropped noticeably." }
+      { "title": "Virtual card provisioning", "description": "End-to-end flow: enrolment → device binding → CSR generation → vault → tokenization." },
+      { "title": "Wallet creation & management", "description": "Create, fund, and manage digital wallets with balance, history, and lifecycle events." },
+      { "title": "Scan-to-Pay", "description": "QR capture with merchant verification, malformed-payload handling, and a recoverable error surface for every failure mode." },
+      { "title": "Reusable UI primitives", "description": "A SwiftUI primitive set (buttons, sheets, form rows) shared across screens — new flows compose from primitives, not bespoke views." }
     ],
     "challenges": [
       {
         "problem": "Multi-step flows had to remain interruption-safe — backgrounding the app or losing connectivity mid-flow couldn't corrupt state.",
-        "solution": "Every state transition persists. The UI reconstructs the correct step on relaunch — turning a network blip from a bug report into a no-op.",
-        "learning": "Modeling flows as explicit state machines pays for itself the first time a user comes back from a backgrounded app and everything just works."
+        "solution": "Every state transition persists. The UI reconstructs the correct step on relaunch — a network blip becomes a no-op instead of a bug report.",
+        "learning": "Modeling flows as explicit state machines pays for itself the first time a backgrounded app comes back and everything just works."
       },
       {
-        "problem": "Scan-to-Pay had to handle camera permissions, malformed QR payloads, and merchant-not-found responses without dropping users into a dead end.",
+        "problem": "Scan-to-Pay had to handle camera permissions, malformed QR payloads, and merchant-not-found responses without dead-ending the user.",
         "solution": "A single error surface maps every failure (system, parsing, network, business) to a recoverable UI state with a clear next action — never a silent fail.",
-        "learning": "In payments, an honest error message is worth more than a thousand happy-path animations. Users forgive failure; they don't forgive silence."
+        "learning": "In payments, an honest error message is worth more than a thousand happy-path animations."
       },
       {
-        "problem": "UI components were duplicated across screens early in the project, slowing iteration.",
-        "solution": "Refactored into a small SwiftUI design system. New screens compose from primitives.",
-        "learning": "Pull the component library out of the second screen, not the tenth — the cost of refactor grows non-linearly."
+        "problem": "UI components were duplicated across screens early on, slowing iteration.",
+        "solution": "Refactored into a SwiftUI primitive set. New screens compose from primitives instead of being hand-built.",
+        "learning": "Pull the component library out of the second screen, not the tenth — refactor cost grows non-linearly."
       }
     ],
-    "outcome": "Three core flows shipped to production: virtual card generation, wallet creation, and Scan-to-Pay. The internal SwiftUI primitives are now used across new features beyond PBW — turning a one-off project into shared platform value.",
+    "outcome": "Core flows in production: virtual card generation, wallet creation, Scan-to-Pay. The modular split — logger as its own framework, UI separated from core, demo as integration host — is what makes the codebase scale: fixes land once, every consumer benefits.",
     "links": [],
     "internal": true,
     "gradient": "linear-gradient(135deg, #1a1410 0%, #3a2a18 50%, #c9a96e 140%)",

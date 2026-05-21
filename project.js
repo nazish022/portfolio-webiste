@@ -22,6 +22,41 @@
     }[c]));
 
   const PRM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const HOVER_ABLE = matchMedia("(hover: hover)").matches;
+  const POINTER_FINE = matchMedia("(pointer: fine)").matches;
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  /* ---- custom cursor ---- */
+  function initCursor() {
+    if (PRM || !HOVER_ABLE || !POINTER_FINE) return;
+    const dot = document.createElement("div");
+    dot.className = "cursor-dot";
+    const ring = document.createElement("div");
+    ring.className = "cursor-ring";
+    document.body.append(dot, ring);
+    document.documentElement.classList.add("has-cursor");
+
+    const m = { x: innerWidth / 2, y: innerHeight / 2 };
+    const r = { x: m.x, y: m.y };
+    const d = { x: m.x, y: m.y };
+    addEventListener("pointermove", (e) => { m.x = e.clientX; m.y = e.clientY; }, { passive: true });
+    function tick() {
+      d.x = lerp(d.x, m.x, 0.55); d.y = lerp(d.y, m.y, 0.55);
+      r.x = lerp(r.x, m.x, 0.18); r.y = lerp(r.y, m.y, 0.18);
+      dot.style.transform = `translate3d(${d.x}px, ${d.y}px, 0) translate(-50%, -50%)`;
+      ring.style.transform = `translate3d(${r.x}px, ${r.y}px, 0) translate(-50%, -50%)`;
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+
+    const sel = 'a, button, input, textarea, .kf-card, .tech-list__item, .detail-stack__badge, .detail-cta';
+    document.addEventListener("pointerover", (e) => {
+      if (e.target.closest(sel)) document.documentElement.classList.add("cursor-hover");
+    });
+    document.addEventListener("pointerout", (e) => {
+      if (e.target.closest(sel)) document.documentElement.classList.remove("cursor-hover");
+    });
+  }
 
   async function loadJSON(path) {
     const res = await fetch(path, { cache: "no-cache" });

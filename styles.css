@@ -1,32 +1,54 @@
 /* ============================================================
    Nazish Sheikh — portfolio
    Editorial dark theme. Warm gold + cool blue, used sparingly.
-   Typography does most of the heavy lifting.
+   Constellation background, layered ambient blobs + grain.
 ============================================================ */
 
-/* ---------- design tokens (exact spec) ---------- */
+/* ---------- design tokens ---------- */
+/* Warm gold on near-black. Editorial, classic. */
 :root {
+  /* layered backgrounds — warm near-black */
   --bg: #0e0e0e;
+  --bg-1: #121110;
   --surface: #161616;
   --surface-2: #1b1b1b;
+  --surface-3: #222222;
   --border: #222222;
   --border-strong: #2a2a2a;
+  --border-bright: #3a3a3a;
 
+  /* primary accent — warm gold (original spec) */
   --gold: #c9a96e;
+  --gold-bright: #e3c187;
+  --gold-deep: #9b8050;
   --gold-dim: #7a6440;
   --gold-soft: rgba(201, 169, 110, 0.12);
   --gold-line: rgba(201, 169, 110, 0.32);
+  --gold-glow: rgba(201, 169, 110, 0.40);
 
+  /* secondary — cool blue, used sparingly */
   --blue: #5b8fc9;
   --blue-soft: rgba(91, 143, 201, 0.14);
 
+  /* text — warm pearl on dark */
   --text: #e5e0d8;
+  --text-dim: #908b83;
   --text-muted: #6a6560;
   --text-faint: #2e2e2e;
-  --text-dim: #908b83;
 
+  /* state */
   --green: #6bb377;
   --error: #d97070;
+
+  /* gradients — gold variants */
+  --grad-gold: linear-gradient(135deg, #e3c187 0%, #c9a96e 45%, #9b8050 100%);
+  --grad-text: linear-gradient(180deg, #e5e0d8 0%, #b8b1a4 100%);
+
+  /* shadows — soft, multi-layer */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 1px 2px rgba(0, 0, 0, 0.3), 0 30px 80px rgba(0, 0, 0, 0.4);
+  --shadow-gold: 0 0 40px rgba(201, 169, 110, 0.22);
 
   --serif: "Cormorant Garamond", "Times New Roman", serif;
   --sans: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -35,10 +57,11 @@
   --max-w: 1240px;
   --pad-x: clamp(20px, 5vw, 64px);
 
-  --t-fast: 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  --t-med: 460ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --t-fast: 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  --t-med: 460ms cubic-bezier(0.22, 1, 0.36, 1);
   --t-slow: 800ms cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* ---------- reset / base ---------- */
@@ -51,18 +74,29 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg);
+  /* layered near-black: solid base + a soft gold wash at top
+     and a deeper sink at bottom. Static — no perf cost. */
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(201, 169, 110, 0.06), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(0, 0, 0, 0.5), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
   color: var(--text);
   font-family: var(--sans);
   font-size: 16px;
   font-weight: 400;
   line-height: 1.65;
+  letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "kern", "liga";
   overflow-x: hidden;
   position: relative;
   min-height: 100vh;
 }
+
+/* keep large headlines balanced (cheap on short text) */
+h1, h2, .contact__headline, .detail-title { text-wrap: balance; }
 
 img, svg { max-width: 100%; display: block; }
 
@@ -142,17 +176,62 @@ code {
 .link-u:hover::after { transform: scaleX(1); }
 
 /* ============================================================
-   background — Three.js canvas
-   z-index: -1 keeps it under everything; pointer-events off
+   background layers (back to front)
+   - bg-canvas:  Three.js constellation scene (deepest)
+   - bg-blobs:   ambient gold + blue gradient blobs
+   - bg-grain:   soft SVG film-grain overlay
+   All sit under content (.nav, main, .footer at z-index: 2)
 ============================================================ */
 .bg-canvas {
   position: fixed;
   inset: 0;
   width: 100vw !important;
   height: 100vh !important;
-  z-index: -1;
+  z-index: -3;
   pointer-events: none;
   display: block;
+}
+
+/* ambient blobs — static, no animated blur (perf-safe) */
+.bg-blobs {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  overflow: hidden;
+}
+.bg-blobs::before,
+.bg-blobs::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.55;
+}
+.bg-blobs::before {
+  width: 70vw;
+  height: 70vw;
+  top: -25vw;
+  left: -15vw;
+  background: radial-gradient(circle, rgba(201, 169, 110, 0.10), transparent 60%);
+}
+.bg-blobs::after {
+  width: 60vw;
+  height: 60vw;
+  bottom: -20vw;
+  right: -15vw;
+  background: radial-gradient(circle, rgba(91, 143, 201, 0.07), transparent 60%);
+}
+
+/* film grain — static texture, very subtle */
+.bg-grain {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 240px 240px;
 }
 
 /* page-transition progress bar */
@@ -186,9 +265,10 @@ code {
 }
 .nav.is-scrolled {
   background: rgba(14, 14, 14, 0.65);
-  backdrop-filter: saturate(140%) blur(12px);
-  -webkit-backdrop-filter: saturate(140%) blur(12px);
+  backdrop-filter: saturate(160%) blur(18px);
+  -webkit-backdrop-filter: saturate(160%) blur(18px);
   border-bottom-color: var(--border);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 12px 30px -20px rgba(0, 0, 0, 0.5);
 }
 .nav__inner {
   max-width: var(--max-w);
@@ -202,20 +282,39 @@ code {
 }
 .nav.is-scrolled .nav__inner { padding-top: 14px; padding-bottom: 14px; }
 
-/* NS monogram */
+/* NS monogram — pill button, more visible against dark bg */
 .nav__brand {
   font-family: var(--mono);
-  font-size: 0.84rem;
+  font-size: 0.78rem;
   letter-spacing: 0.32em;
   color: var(--gold);
-  padding: 6px 0;
-  border-bottom: 1px solid transparent;
-  transition: color var(--t-fast), border-color var(--t-fast);
+  padding: 8px 16px 8px 18px; /* extra right pad balances the wide tracking */
+  border: 1px solid var(--gold-line);
+  background: var(--gold-soft);
+  border-radius: 999px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: color var(--t-fast), border-color var(--t-fast),
+              transform 280ms var(--ease-spring),
+              box-shadow var(--t-fast);
+}
+.nav__brand::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--grad-gold);
+  opacity: 0;
+  transition: opacity var(--t-fast);
+  z-index: -1;
 }
 .nav__brand:hover {
-  color: var(--gold);
-  border-bottom-color: var(--gold);
+  color: #1a1408;
+  border-color: var(--gold-bright);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px -8px var(--gold-glow);
 }
+.nav__brand:hover::before { opacity: 1; }
 
 .nav__links {
   display: flex;
@@ -297,15 +396,16 @@ code {
 
 .hero__eyebrow {
   display: inline-block;
-  margin-bottom: 28px;
-  font-size: 0.72rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--text-muted);
+  margin-bottom: 20px;
+  font-family: var(--mono);
+  font-size: 0.92rem;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
 }
 .hero__eyebrow::before {
   content: "—— ";
   color: var(--gold);
+  letter-spacing: 0;
 }
 
 /* spec: clamp(72px, 12vw, 160px) — matched */
@@ -365,9 +465,39 @@ code {
   font-family: var(--sans);
   font-size: clamp(1rem, 1.4vw, 1.18rem);
   color: var(--text-dim);
-  max-width: 56ch;
+  max-width: 58ch;
+  margin-bottom: 28px;
+  line-height: 1.55;
+}
+
+/* hero meta strip — current status / what I'm looking for */
+.hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 22px;
   margin-bottom: 36px;
-  line-height: 1.5;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+.hero__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.hero__meta-item strong {
+  color: var(--text);
+  font-weight: 500;
+}
+.hero__meta-item + .hero__meta-item::before {
+  content: "";
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--gold-line);
+  margin-right: 12px;
 }
 
 .hero__cta {
